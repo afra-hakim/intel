@@ -42,6 +42,7 @@ body {
   max-width: 1200px;
 }
 
+
 /* Knowledge Sidebar Styles */
 .knowledge-sidebar {
   width: var(--sidebar-width);
@@ -52,6 +53,8 @@ body {
   overflow: hidden;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
+
+
 
 .sidebar-header {
   padding: 20px;
@@ -667,3 +670,4 @@ code {
 #toggle-tts-btn.muted {
   background-color: var(--primary-color) !important;
 }
+

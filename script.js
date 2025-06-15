@@ -458,6 +458,14 @@ const chatHistory = {
   pastChats: []
 };
 
+let emotionDetectionActive = false;
+const emotionVideo = document.createElement('video');
+const emotionCanvas = document.createElement('canvas');
+const emotionContext = emotionCanvas.getContext('2d');
+let emotionModel = null;
+let lastConfusionTime = 0;
+let confusionCount = 0;
+
 // Replace the current extractTopicFromText function with this improved version
 function extractTopicFromText(text) {
   // Define major Python domains
@@ -1046,6 +1054,196 @@ function showChatHistory() {
     }
   });
 }
+function setupEmotionDetection() {
+  const emotionContainer = document.createElement('div');
+  emotionContainer.id = 'emotion-container';
+  emotionContainer.innerHTML = `
+    <div class="emotion-controls">
+      <button id="toggleEmotionDetection" class="emotion-button">
+      </button>
+      <div class="emotion-feedback">
+        <video id="emotion-video" width="200" height="150" autoplay muted></video>
+        <canvas id="emotion-canvas" width="200" height="150"></canvas>
+        <div id="emotion-result"></div>
+      </div>
+    </div>
+  `;
+  
+  document.querySelector('.chat-controls').parentNode.insertBefore(emotionContainer, document.querySelector('.chat-controls'));
+  
+  const style = document.createElement('style');
+  style.textContent = `
+    #emotion-container {
+      margin: 15px 0;
+      padding: 10px;
+      border-radius: 8px;
+      background: var(--sidebar-bg-color);
+    }
+    .emotion-controls {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .emotion-button {
+      padding: 8px 12px;
+      background: var(--button-color);
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    .emotion-feedback {
+      display: none;
+      position: relative;
+    }
+    #emotion-video, #emotion-canvas {
+      border-radius: 8px;
+      border: 2px solid var(--border-color);
+    }
+    #emotion-result {
+      position: absolute;
+      bottom: 5px;
+      left: 5px;
+      background: rgba(0,0,0,0.7);
+      color: white;
+      padding: 3px 6px;
+      border-radius: 4px;
+      font-size: 12px;
+    }
+    .emotion-active .emotion-feedback {
+      display: block;
+    }
+  `;
+  document.head.appendChild(style);
+  
+  document.getElementById('toggleEmotionDetection').addEventListener('click', toggleEmotionDetection);
+}
+
+async function toggleEmotionDetection() {
+  emotionDetectionActive = !emotionDetectionActive;
+  const button = document.getElementById('toggleEmotionDetection');
+  
+  if (emotionDetectionActive) {
+    button.classList.add('active');
+    document.getElementById('emotion-container').classList.add('emotion-active');
+    
+    try {
+      if (!emotionModel) {
+        emotionModel = await loadEmotionModel();
+      }
+      
+      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+      emotionVideo.srcObject = stream;
+      emotionVideo.play();
+      detectEmotions();
+    } catch (error) {
+      console.error('Error starting emotion detection:', error);
+      addMessage("Couldn't start emotion detection. Please ensure camera access is allowed.", false);
+      resetEmotionDetection();
+    }
+  } else {
+    resetEmotionDetection();
+  }
+}
+
+function resetEmotionDetection() {
+  const button = document.getElementById('toggleEmotionDetection');
+  button.innerHTML = '<i class="fas fa-smile"></i> Enable Emotion Detection';
+  button.classList.remove('active');
+  document.getElementById('emotion-container').classList.remove('emotion-active');
+  
+  if (emotionVideo.srcObject) {
+    emotionVideo.srcObject.getTracks().forEach(track => track.stop());
+  }
+  emotionDetectionActive = false;
+}
+
+async function loadEmotionModel() {
+  try {
+    await loadScript('https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@3.18.0/dist/tf.min.js');
+    await loadScript('https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js');
+    
+    await faceapi.nets.tinyFaceDetector.loadFromUri('https://justadudewhohacks.github.io/face-api.js/models');
+    await faceapi.nets.faceLandmark68Net.loadFromUri('https://justadudewhohacks.github.io/face-api.js/models');
+    await faceapi.nets.faceExpressionNet.loadFromUri('https://justadudewhohacks.github.io/face-api.js/models');
+    
+    return faceapi;
+  } catch (error) {
+    console.error('Error loading emotion model:', error);
+    throw error;
+  }
+}
+
+function loadScript(url) {
+  return new Promise((resolve, reject) => {
+    const script = document.createElement('script');
+    script.src = url;
+    script.onload = resolve;
+    script.onerror = reject;
+    document.head.appendChild(script);
+  });
+}
+
+async function detectEmotions() {
+  if (!emotionDetectionActive) return;
+  
+  try {
+    const detections = await faceapi.detectAllFaces(emotionVideo, 
+      new faceapi.TinyFaceDetectorOptions()).withFaceLandmarks().withFaceExpressions();
+    
+    emotionCanvas.width = emotionVideo.videoWidth;
+    emotionCanvas.height = emotionVideo.videoHeight;
+    faceapi.draw.drawDetections(emotionCanvas, detections);
+    faceapi.draw.drawFaceLandmarks(emotionCanvas, detections);
+    faceapi.draw.drawFaceExpressions(emotionCanvas, detections);
+    
+    if (detections.length > 0) {
+      const expressions = detections[0].expressions;
+      const dominantEmotion = Object.entries(expressions).reduce((a, b) => a[1] > b[1] ? a : b)[0];
+      document.getElementById('emotion-result').textContent = `Detected: ${dominantEmotion}`;
+      
+      if (['sad', 'angry', 'fearful'].includes(dominantEmotion)) {
+        handleConfusionDetection();
+      }
+    }
+    
+    requestAnimationFrame(detectEmotions);
+  } catch (error) {
+    console.error('Error detecting emotions:', error);
+    resetEmotionDetection();
+  }
+}
+
+function handleConfusionDetection() {
+  const now = Date.now();
+  if (now - lastConfusionTime < 30000) return;
+  
+  confusionCount++;
+  lastConfusionTime = now;
+  
+  if (confusionCount >= 2) {
+    confusionCount = 0;
+    const activeQuiz = document.querySelector('.quiz-container:last-child');
+    
+    if (activeQuiz) {
+      const question = activeQuiz.querySelector('.quiz-question').textContent;
+      addMessage("I noticed you might be confused about this question. Would you like me to explain the concept again?", false);
+      addMessage(`Type "explain" if you'd like me to go over: ${question}`, false);
+    } else {
+      const botMessages = Array.from(document.querySelectorAll('.bot-message')).reverse();
+      const lastExplanation = botMessages.find(msg => 
+        !msg.querySelector('.quiz-container') && 
+        !msg.textContent.includes('Would you like me to explain')
+      );
+      
+      if (lastExplanation) {
+        const explanationText = lastExplanation.textContent.substring(0, 100) + '...';
+        addMessage("I noticed you might be confused. Would you like me to explain this again in a different way?", false);
+        addMessage(`Type "explain" if you'd like me to re-explain: ${explanationText}`, false);
+      }
+    }
+  }
+}
 
 function init() {
   sendButton.addEventListener("click", sendMessage);
@@ -1057,10 +1255,54 @@ function init() {
 
   updateKnowledgeSidebar();
   setupChatHistoryControls();
+  setupEmotionDetection();
   
   setTimeout(() => {
     addMessage("Welcome to the DeepSeek Chat with BKT! I can help you learn about programming concepts, test your knowledge, and track your mastery level across different topics. Ask me anything!", false);
   }, 500);
 }
+// Get access to webcam
+navigator.mediaDevices.getUserMedia({ video: true })
+  .then(function(stream) {
+    document.getElementById("video").srcObject = stream;
+  })
+  .catch(function(err) {
+    console.error("Error accessing webcam: ", err);
+  });
+
+function analyzeEmotion() {
+  const video = document.getElementById("video");
+  const canvas = document.getElementById("canvas");
+  const context = canvas.getContext("2d");
+
+  // Draw current video frame to canvas
+  canvas.width = video.videoWidth;
+  canvas.height = video.videoHeight;
+  context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+  // Convert canvas to base64 image
+  const imageData = canvas.toDataURL('image/jpeg');
+
+  fetch('http://localhost:5000/analyze_emotion', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ image: imageData })
+  })
+  .then(res => res.json())
+  .then(data => {
+    const emotion = data.dominant_emotion || "neutral";
+    document.getElementById("result").innerText = "Emotion: " + emotion;
+
+    if (emotion === "happy") {
+      alert("Great! You understood the concept.");
+    } else {
+      alert("Looks like you're confused. Let's re-explain it!");
+      // Optionally re-trigger /chat with same message to get another explanation
+      // Example: callChatAPI("previous_question_text_here");
+    }
+  })
+  .catch(err => console.error("Emotion analysis failed:", err));
+}
+
 
 window.addEventListener("load", init);

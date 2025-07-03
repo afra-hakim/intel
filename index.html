@@ -4,10 +4,16 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <!-- Add this to your HTML -->
-    <video id="video" width="320" height="240" autoplay></video>
+    <div class="camera-section">
+  <h4>Check Understanding</h4>
+  <div class="camera-preview">
+    <video id="video" width="320" height="240" autoplay muted playsinline></video>
     <canvas id="canvas" style="display: none;"></canvas>
-    <button onclick="analyzeEmotion()">Check Understanding</button>
-    <p id="result"></p>
+  </div>
+  <button class="camera-btn" onclick="analyzeEmotion()">Check Understanding</button>
+  <span id="result" class="emotion-result"></span>
+</div>
+
     <title>DeepSeek Chat with BKT</title>
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">

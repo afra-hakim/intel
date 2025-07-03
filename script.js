@@ -465,6 +465,8 @@ const emotionContext = emotionCanvas.getContext('2d');
 let emotionModel = null;
 let lastConfusionTime = 0;
 let confusionCount = 0;
+let lastUserMessage = "";
+
 
 // Replace the current extractTopicFromText function with this improved version
 function extractTopicFromText(text) {
@@ -870,7 +872,7 @@ function addQuizQuestion(question) {
 async function sendMessage() {
   const userMessage = chatInput.value.trim();
   if (!userMessage) return;
-
+  lastUserMessage = userMessage;
   addMessage(userMessage, true);
   chatInput.value = "";
   
@@ -1299,9 +1301,45 @@ function analyzeEmotion() {
       alert("Looks like you're confused. Let's re-explain it!");
       // Optionally re-trigger /chat with same message to get another explanation
       // Example: callChatAPI("previous_question_text_here");
+      regenerateExplanation();
     }
   })
   .catch(err => console.error("Emotion analysis failed:", err));
+}
+function regenerateExplanation() {
+    if (!lastUserMessage) {
+        addMessage("No previous question to re-explain.", false);
+        return;
+    }
+    addMessage("Regenerating explanation for: " + lastUserMessage, false);
+    fetch("http://127.0.0.1:5000/chat", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json; charset=utf-8",
+        },
+        body: JSON.stringify({ message: lastUserMessage }),
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.response) {
+            addMessage(data.response.trim(), false);
+            if (data.mcq_questions && data.mcq_questions.length > 0) {
+                setTimeout(() => {
+                    addMessage("Let's test your understanding with a few questions:", false);
+                    data.mcq_questions.forEach((question, index) => {
+                        setTimeout(() => {
+                            addQuizQuestion(question);
+                        }, index * 1000);
+                    });
+                }, 1000);
+            }
+        } else {
+            addMessage("Sorry, couldn't regenerate the explanation.", false);
+        }
+    })
+    .catch(err => {
+        addMessage("Error: Unable to connect to server.", false);
+    });
 }
 
 

@@ -21,6 +21,8 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
+
+
     <div class="app-container">
         <!-- New Knowledge Sidebar -->
         <div class="knowledge-sidebar">
@@ -39,6 +41,16 @@
                     <!-- Skill domains will be added dynamically -->
                 </div>
             </div>
+
+                <!-- PDF Upload Section -->
+    <div class="pdf-upload-section">
+        <h4 style="font-size: 1.1em;">Summarizing PDF</h4>
+        <label class="custom-file-upload">
+        <input type="file" id="pdfInput" accept="application/pdf" style="margin:10px 0;">
+        <i class="fas fa-file-upload"></i> <span id="pdf-upload-label">Choose PDF</span></label>
+        <button id="extractPdfBtn" class="extract-btn"> <i class="fas fa-magic"></i>Extract Key Points</button>
+        <!-- <div id="pdfKeyPoints" style="margin-top:15px;"></div> -->
+    </div>
         </div>
         
         <!-- Main Chat Area -->
@@ -59,5 +71,11 @@
     <script src="script.js"></script>
     <script src="speech.js"></script>
     <script src="tts.js"></script>
+
+    <!-- Load pdf.js library from CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<!-- Your PDF extraction script -->
+    <script src="pdf-extract.js"></script>
+
 </body>
 </html>

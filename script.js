@@ -1260,7 +1260,7 @@ function init() {
   setupEmotionDetection();
   
   setTimeout(() => {
-    addMessage("Welcome to the DeepSeek Chat with BKT! I can help you learn about programming concepts, test your knowledge, and track your mastery level across different topics. Ask me anything!", false);
+    addMessage("Welcome to Python Virtual Tutor!", false);
   }, 500);
 }
 // Get access to webcam

@@ -741,3 +741,76 @@ code {
   font-weight: 500;
   letter-spacing: 0.3px;
 }
+
+
+
+.pdf-upload-section {
+  margin-top: 16px;
+  padding-top: 8px;
+  border-top: 1px solid #333;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+/* Custom File Upload Button */
+.custom-file-upload {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 24px;
+  cursor: pointer;
+  background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+  color: #fff;
+  border: none;
+  border-radius: 20px;
+  font-weight: 500;
+  font-size: 1em;
+  transition: background 0.2s, box-shadow 0.2s;
+  box-shadow: 0 2px 8px rgba(106,90,205,0.09);
+  outline: none;
+  position: relative;
+}
+.custom-file-upload:hover, .custom-file-upload:focus {
+  background: linear-gradient(90deg, var(--secondary-color), var(--primary-color));
+  box-shadow: 0 4px 16px rgba(106,90,205,0.18);
+}
+.custom-file-upload input[type="file"] {
+  display: none;
+}
+.custom-file-upload i {
+  font-size: 1.2em;
+}
+
+/* Extract Button */
+.extract-btn {
+  padding: 5px 28px;
+  background: var(--primary-color);
+  color: #fff;
+  border: none;
+  border-radius: 24px;
+  font-size: 1em;
+  font-weight: 500;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(106,90,205,0.09);
+  transition: background 0.2s, transform 0.1s;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.extract-btn:hover, .extract-btn:focus {
+  background: var(--secondary-color);
+  transform: translateY(-2px) scale(1.03);
+}
+.extract-btn i {
+  font-size: 1.2em;
+}
+
+/* Optional: Show selected file name */
+#pdf-upload-label {
+  font-weight: 400;
+  color: #fff;
+  margin-left: 4px;
+}
+

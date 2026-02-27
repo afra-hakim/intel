@@ -20,6 +20,10 @@ Clean and responsive UI
 
 Backend: Flask (Python)
 
-AI Model: Ollama DeepSeek-R1 (8B)
+AI Model: Ollama DeepSeek-R1 
 
 Frontend: HTML, CSS, JavaScript
+
+
+To run frontend:open index.html with live server
+To run backend: run server.py file

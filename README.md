@@ -14,12 +14,9 @@ Interact through both text and voice
 
 BKT-level of of each users knowlegde can be understood
 
-mcqs genrated for practice
+Mcqs genrated for practice
 
-when pdf uploaded give summary of points
-
-Integration with Ollama’s DeepSeek-R1 (8B) model
-Clean and responsive UI
+When pdf uploaded give summary of points
 
 🛠️ Tech Stack
 
@@ -32,5 +29,6 @@ Frontend: HTML, CSS, JavaScript
 
 To run frontend:open index.html with live server
 To run backend: run server.py file
+
 
 
